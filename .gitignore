@@ -36,4 +36,23 @@ out/
 ### VS Code ###
 .vscode/
 
+# Gradle
+.gradle/
+
+# Spring Boot
+BOOT-INF/
+META-INF/
+
+# IDE
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Docker
 .env

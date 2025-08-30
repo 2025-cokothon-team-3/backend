@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,12 +22,13 @@ public class TestService {
     private final QuestionRepository questionRepository;
     private final UserAnswerRepository userAnswerRepository;
     private final TestResultRepository testResultRepository;
+    private final TravelPersonalityRepository personalityRepository;
 
     /**
      * 테스트 제출 및 결과 계산
      */
     @Transactional
-    public TestResultDto submitTest(Long userId, SubmitTestRequestDto requestDto) {
+    public Map<String, Object> submitTest(Long userId, SubmitTestRequestDto requestDto) {
         try {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
@@ -45,15 +48,42 @@ public class TestService {
 
             TestResultDto resultDto = convertToTestResultDto(testResult);
 
+            Map<String, Object> personalityDetails = getPersonalityDetails(resultDto);
+
             log.info("사용자 {}의 테스트가 성공적으로 완료되었습니다. 결과: {}",
                     userId, testResult.getDominantType());
 
-            return resultDto;
+            return Map.of(
+                    "testResult", resultDto,
+                    "personalityDetails", personalityDetails
+            );
 
         } catch (Exception e) {
             log.error("테스트 제출 중 오류 발생: ", e);
             throw e;
         }
+    }
+
+    private Map<String, Object> getPersonalityDetails(TestResultDto result) {
+        List<String> names = List.of(
+                result.getPlanningType(), result.getBudgetType(),
+                result.getActivityType(), result.getSocialType()
+        );
+
+        List<TravelPersonality> personalities =
+                personalityRepository.findByNameInAndIsDeletedFalse(names);
+
+        Map<String, Object> details = new HashMap<>();
+        for (TravelPersonality p : personalities) {
+            String key = p.getCategory().name().toLowerCase();
+            details.put(key, Map.of(
+                    "name", p.getName(),
+                    "description", p.getDescription(),
+                    "iconUrl", p.getIconUrl(),
+                    "colorCode", p.getColorCode()
+            ));
+        }
+        return details;
     }
 
     /**

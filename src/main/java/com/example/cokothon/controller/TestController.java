@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
+import java.util.Map;
+
 @Tag(name = "테스트 관리", description = "여행 성향 테스트 제출 및 결과 조회 API")
 @RestController
 @RequestMapping("/api/tests")
@@ -21,14 +23,14 @@ public class TestController {
     @Operation(summary = "테스트 제출",
             description = "16개 질문에 대한 답변을 제출하고 여행 성향 결과를 받습니다.")
     @PostMapping("/submit/{userId}")
-    public ApiResponse<TestResultDto> submitTest(
+    public ApiResponse<Map<String, Object>> submitTest(
             @Parameter(description = "사용자 ID", example = "1")
             @PathVariable Long userId,
             @Parameter(description = "테스트 답변 데이터")
             @Valid @RequestBody SubmitTestRequestDto requestDto) {
 
         try {
-            TestResultDto result = testService.submitTest(userId, requestDto);
+            Map<String, Object> result = testService.submitTest(userId, requestDto);
             return ApiResponse.success("테스트가 성공적으로 완료되었습니다.", result);
         } catch (IllegalArgumentException e) {
             return ApiResponse.failure(e.getMessage());

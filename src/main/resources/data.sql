@@ -104,23 +104,23 @@ INSERT INTO questions (content, choice1, choice2, choice3, question_order, categ
                                                                                                                               '여행이니까 먹고 싶은 거 다 먹자 !!!',
                                                                                                                               16, 'SOCIAL', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- 5. 여행 성향 타입 기본 데이터 (선택사항)
-INSERT INTO travel_personalities (code, name, description, category, color_code, is_deleted, created_at, updated_at) VALUES
+-- 5. 여행 성향 타입 기본 데이터
+INSERT INTO travel_personalities (code, name, description, category, color_code, icon_url, is_deleted, created_at, updated_at) VALUES
 -- PLANNING 카테고리
-('SPONTANEOUS', '즉흥형', '계획보다는 그 순간의 감정과 직감을 따라 여행하는 것을 좋아합니다. 예상치 못한 발견과 모험을 즐깁니다.', 'PLANNING', '#FF6B6B', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('PLANNER', '계획형', '여행 전 세세한 계획을 세우는 것을 선호하며, 일정에 따라 체계적으로 움직이는 것을 좋아합니다.', 'PLANNING', '#4ECDC4', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('SPONTANEOUS', '즉흥형', '계획보다는 그 순간의 감정과 직감을 따라 여행하는 것을 좋아합니다. 예상치 못한 발견과 모험을 즐깁니다.', 'PLANNING', '#FF6B6B', '✨', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('PLANNER', '계획형', '여행 전 세세한 계획을 세우는 것을 선호하며, 일정에 따라 체계적으로 움직이는 것을 좋아합니다.', 'PLANNING', '#4ECDC4', '📋', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- BUDGET 카테고리
-('BUDGET', '절약형', '가성비를 중시하며, 합리적인 소비로 알찬 여행을 만들어가는 것을 선호합니다.', 'BUDGET', '#45B7D1', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('LUXURY', '럭셔리형', '품질 높은 경험을 위해서는 비용 지출을 아끼지 않으며, 특별하고 프리미엄한 여행을 추구합니다.', 'BUDGET', '#F7DC6F', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('BUDGET', '절약형', '가성비를 중시하며, 합리적인 소비로 알찬 여행을 만들어가는 것을 선호합니다.', 'BUDGET', '#45B7D1', '💰', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('LUXURY', '럭셔리형', '품질 높은 경험을 위해서는 비용 지출을 아끼지 않으며, 특별하고 프리미엄한 여행을 추구합니다.', 'BUDGET', '#F7DC6F', '👑', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- ACTIVITY 카테고리
-('RELAXED', '휴식형', '여행에서 충분한 휴식과 여유로운 시간을 중시하며, 재충전을 위한 힐링 여행을 선호합니다.', 'ACTIVITY', '#BB8FCE', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('ACTIVE', '액티브형', '다양한 체험과 활동적인 여행을 즐기며, 새로운 도전과 스릴을 추구합니다.', 'ACTIVITY', '#58D68D', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RELAXED', '휴식형', '여행에서 충분한 휴식과 여유로운 시간을 중시하며, 재충전을 위한 힐링 여행을 선호합니다.', 'ACTIVITY', '#BB8FCE', '🧘', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('ACTIVE', '액티브형', '다양한 체험과 활동적인 여행을 즐기며, 새로운 도전과 스릴을 추구합니다.', 'ACTIVITY', '#58D68D', '🏃', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- SOCIAL 카테고리
-('INDIVIDUAL', '개인형', '혼자만의 시간과 공간을 중시하며, 개인적인 경험과 성찰을 위한 여행을 선호합니다.', 'SOCIAL', '#85C1E9', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('SOCIAL', '사교형', '사람들과의 만남과 소통을 즐기며, 함께하는 즐거움과 추억 만들기를 중시합니다.', 'SOCIAL', '#F8C471', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+('INDIVIDUAL', '개인형', '혼자만의 시간과 공간을 중시하며, 개인적인 경험과 성찰을 위한 여행을 선호합니다.', 'SOCIAL', '#85C1E9', '🧑', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('SOCIAL', '사교형', '사람들과의 만남과 소통을 즐기며, 함께하는 즐거움과 추억 만들기를 중시합니다.', 'SOCIAL', '#F8C471', '👥', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- 6. 테스트용 사용자 데이터 (개발/테스트용)
 INSERT INTO users (nickname, is_deleted, created_at, updated_at) VALUES

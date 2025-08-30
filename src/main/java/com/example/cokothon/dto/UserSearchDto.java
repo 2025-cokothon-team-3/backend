@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Schema(description = "사용자 검색 결과 DTO")
 @Data
 @Builder
@@ -23,5 +25,5 @@ public class UserSearchDto {
     private TestResultDto testResult;
 
     @Schema(description = "사용자 생성일시", example = "2025-01-15T10:30:00")
-    private java.time.LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 }

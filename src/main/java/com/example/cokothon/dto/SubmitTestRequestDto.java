@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Schema(description = "테스트 제출 요청 DTO")
 @Data
 @Builder
@@ -14,7 +16,7 @@ import lombok.NoArgsConstructor;
 public class SubmitTestRequestDto {
 
     @Schema(description = "사용자 답변 목록")
-    private java.util.List<UserAnswerDto> answers;
+    private List<UserAnswerDto> answers;
 
     @Schema(description = "사용자 답변 DTO")
     @Data

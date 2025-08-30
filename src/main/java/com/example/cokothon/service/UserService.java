@@ -21,8 +21,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final TestResultRepository testResultRepository;
-    
-    
+
+    @Transactional
     public ApiResponse<User> loginCheck(String nickname){
     	
     	if(nickname.length()>15) {

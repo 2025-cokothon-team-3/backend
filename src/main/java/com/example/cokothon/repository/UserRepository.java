@@ -1,4 +1,5 @@
 package com.example.cokothon.repository;
+<<<<<<< Updated upstream
 
 import com.example.cokothon.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -40,4 +41,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "WHERE u.nickname LIKE %:keyword% AND u.isDeleted = false " +
             "ORDER BY u.createdAt DESC")
     List<User> findUsersWithTestResultsByNickname(@Param("keyword") String keyword);
+    
+=======
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.cokothon.entity.User;
+
+
+public interface UserRepository extends JpaRepository<User, Long> {
+>>>>>>> Stashed changes
+    boolean existsByName(String name);
+    Optional<User> findByName(String name);
 }

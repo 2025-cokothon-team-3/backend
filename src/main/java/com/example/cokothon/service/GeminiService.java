@@ -3,7 +3,6 @@ package com.example.cokothon.service;
 import java.time.Duration;
 import java.util.List;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -25,20 +24,13 @@ public class GeminiService {
     
     private final GeminiConfig geminiConfig;
     private final WebClient webClient;
-    
-    @Bean
-    public WebClient webClient() {
-        return WebClient.builder()
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
-                .build();
-    }
-    
+
     public Mono<String> generateText(String prompt) {
         GeminiRequestDto request = createRequest(prompt);
-        
-        String url = geminiConfig.getBaseUrl() + 
-                    "/models/gemini-2.0-flash-exp:generateContent?key=" + 
-                    geminiConfig.getApiKey();
+
+        String url = geminiConfig.getApi().getBaseUrl() +
+                "/models/" + geminiConfig.getApi().getModel() + ":generateContent?key=" +
+                geminiConfig.getApi().getKey();
         
         return webClient.post()
                 .uri(url)

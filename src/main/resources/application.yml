@@ -28,7 +28,9 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /docs
+
 gemini:
-  api-key: ${GEMINI_API_KEY}
-  model: gemini-2.5-pro
-  base-url: https://generativelanguage.googleapis.com/v1beta
+  api:
+    key: ${GEMINI_API_KEY}
+    model: gemini-2.5-pro
+    baseUrl: https://generativelanguage.googleapis.com/v1beta

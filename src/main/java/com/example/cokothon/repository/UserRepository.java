@@ -40,6 +40,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "WHERE u.nickname LIKE %:keyword% AND u.isDeleted = false " +
             "ORDER BY u.createdAt DESC")
     List<User> findUsersWithTestResultsByNickname(@Param("keyword") String keyword);
-
-    boolean existsByName(String name);
 }

@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
 
 import java.util.Map;
 
@@ -25,12 +24,10 @@ public class TestController {
     @PostMapping("/submit/{userId}")
     public ApiResponse<Map<String, Object>> submitTest(
             @Parameter(description = "사용자 ID", example = "1")
-            @PathVariable Long userId,
-            @Parameter(description = "테스트 답변 데이터")
-            @Valid @RequestBody SubmitTestRequestDto requestDto) {
+            @PathVariable Long userId) {
 
         try {
-            Map<String, Object> result = testService.submitTest(userId, requestDto);
+            Map<String, Object> result = testService.submitTest(userId);
             return ApiResponse.success("테스트가 성공적으로 완료되었습니다.", result);
         } catch (IllegalArgumentException e) {
             return ApiResponse.failure(e.getMessage());

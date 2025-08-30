@@ -25,29 +25,37 @@ public class TestService {
     private final TravelPersonalityRepository personalityRepository;
 
     /**
-     * 테스트 제출 및 결과 계산
+     * 테스트 제출 및 결과 계산 (개별 저장된 답변 기반)
      */
     @Transactional
-    public Map<String, Object> submitTest(Long userId, SubmitTestRequestDto requestDto) {
+    public Map<String, Object> submitTest(Long userId) {
         try {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+
+            // 기존 개별 저장된 답변들 조회
+            List<UserAnswer> existingAnswers = userAnswerRepository.findByUserIdAndIsDeletedFalseOrderByQuestionId(userId);
+
+            if (existingAnswers.size() != 16) {
+                throw new IllegalStateException("16개의 답변이 모두 필요합니다. 현재: " + existingAnswers.size());
+            }
 
             List<Question> questions = questionRepository.findAllByOrderByQuestionOrder();
             if (questions.size() != 16) {
                 throw new IllegalStateException("질문 데이터가 올바르지 않습니다. 16개 질문이 필요합니다.");
             }
 
-            validateAnswers(requestDto.getAnswers(), questions);
+            // 답변 유효성 검증
+            validateAnswers(existingAnswers, questions);
 
-            deleteExistingAnswers(userId);
+            // 기존 테스트 결과만 삭제 (답변은 유지)
+            testResultRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
+                    .ifPresent(testResultRepository::delete);
 
-            List<UserAnswer> savedAnswers = saveUserAnswers(userId, requestDto.getAnswers());
-
-            TestResult testResult = calculateAndSaveTestResult(userId, savedAnswers, questions);
+            // 기존 답변들로 테스트 결과 계산
+            TestResult testResult = calculateAndSaveTestResult(userId, existingAnswers, questions);
 
             TestResultDto resultDto = convertToTestResultDto(testResult);
-
             Map<String, Object> personalityDetails = getPersonalityDetails(resultDto);
 
             log.info("사용자 {}의 테스트가 성공적으로 완료되었습니다. 결과: {}",
@@ -89,7 +97,7 @@ public class TestService {
     /**
      * 답변 유효성 검증
      */
-    private void validateAnswers(List<SubmitTestRequestDto.UserAnswerDto> answers, List<Question> questions) {
+    private void validateAnswers(List<UserAnswer> answers, List<Question> questions) {
         if (answers == null || answers.size() != 16) {
             throw new IllegalArgumentException("16개의 답변이 모두 필요합니다.");
         }
@@ -99,7 +107,7 @@ public class TestService {
                 .collect(Collectors.toList());
 
         List<Long> answeredQuestionIds = answers.stream()
-                .map(SubmitTestRequestDto.UserAnswerDto::getQuestionId)
+                .map(UserAnswer::getQuestionId)
                 .collect(Collectors.toList());
 
         for (Long questionId : questionIds) {
@@ -107,45 +115,6 @@ public class TestService {
                 throw new IllegalArgumentException("질문 " + questionId + "에 대한 답변이 없습니다.");
             }
         }
-
-        long distinctCount = answeredQuestionIds.stream().distinct().count();
-        if (distinctCount != answers.size()) {
-            throw new IllegalArgumentException("중복된 질문에 대한 답변이 있습니다.");
-        }
-
-        for (SubmitTestRequestDto.UserAnswerDto answer : answers) {
-            if (answer.getSelectedChoice() < 1 || answer.getSelectedChoice() > 3) {
-                throw new IllegalArgumentException("선택 답변은 1-3 사이여야 합니다.");
-            }
-        }
-    }
-
-    /**
-     * 기존 답변 및 결과 삭제 (재테스트 허용)
-     */
-    private void deleteExistingAnswers(Long userId) {
-        List<UserAnswer> existingAnswers = userAnswerRepository.findByUserIdAndIsDeletedFalseOrderByQuestionId(userId);
-        if (!existingAnswers.isEmpty()) {
-            userAnswerRepository.deleteAll(existingAnswers);
-        }
-
-        testResultRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
-                .ifPresent(testResultRepository::delete);
-    }
-
-    /**
-     * 사용자 답변 저장
-     */
-    private List<UserAnswer> saveUserAnswers(Long userId, List<SubmitTestRequestDto.UserAnswerDto> answers) {
-        List<UserAnswer> userAnswers = answers.stream()
-                .map(answerDto -> UserAnswer.builder()
-                        .userId(userId)
-                        .questionId(answerDto.getQuestionId())
-                        .selectedChoice(answerDto.getSelectedChoice())
-                        .build())
-                .collect(Collectors.toList());
-
-        return userAnswerRepository.saveAll(userAnswers);
     }
 
     /**

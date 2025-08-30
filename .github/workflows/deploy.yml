@@ -23,6 +23,8 @@ jobs:
           ls -la
           echo "Looking for gradlew:"
           find . -name "gradlew" -type f
+          echo "Looking for build.gradle:"
+          find . -name "build.gradle" -type f
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -40,18 +42,49 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
+      - name: Grant execute permission and build
+        run: |
+          # gradlew 파일 위치에 따라 조건부 실행
+          if [ -f "./gradlew" ]; then
+            echo "gradlew found in root directory"
+            chmod +x ./gradlew
+            ./gradlew clean bootJar
+          elif [ -f "./backend/gradlew" ]; then
+            echo "gradlew found in backend directory"
+            chmod +x ./backend/gradlew
+            cd backend && ./gradlew clean bootJar
+          else
+            echo "gradlew not found"
+            exit 1
+          fi
 
-      - name: Build with Gradle
-        run: ./gradlew clean bootJar
+      - name: Debug build output
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Directory contents:"
+          ls -la
+          echo "Looking for JAR files:"
+          find . -name "*.jar" -type f
+          echo "Looking for Docker files:"
+          find . -name "docker-compose.yml" -o -name "Dockerfile"
 
       - name: Prepare deployment files
         run: |
           mkdir -p deploy
-          cp build/libs/*.jar deploy/app.jar
-          cp docker-compose.yml deploy/
-          cp Dockerfile deploy/
+          # JAR 파일 위치 확인 후 복사
+          if [ -f "./build/libs/"*.jar ]; then
+            cp ./build/libs/*.jar deploy/app.jar
+            cp ./docker-compose.yml deploy/
+            cp ./Dockerfile deploy/
+          elif [ -f "./backend/build/libs/"*.jar ]; then
+            cp ./backend/build/libs/*.jar deploy/app.jar
+            cp ./backend/docker-compose.yml deploy/
+            cp ./backend/Dockerfile deploy/
+          else
+            echo "JAR file not found"
+            exit 1
+          fi
 
       - name: Configure SSH
         env:

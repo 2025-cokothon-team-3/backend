@@ -6,14 +6,20 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-cokothon}
     ports:
       - "${MYSQL_PORT:-3306}:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
 
   app:
     build: .
     environment:
-      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-cokothon}?useSSL=false&serverTimezone=Asia/Seoul
+      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-cokothon}?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
       DB_USERNAME: root
       DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
     ports:
-      - "${APP_PORT:-8080}:8080"
+      - "${APP_PORT:-8081}:8081"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+    restart: on-failure:3

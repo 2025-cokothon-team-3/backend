@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: cokothon
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/cokothon?useSSL=false&serverTimezone=Asia/Seoul}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:password}
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.example: DEBUG

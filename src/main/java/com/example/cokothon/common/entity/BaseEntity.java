@@ -2,6 +2,7 @@ package com.example.cokothon.common.entity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -35,6 +36,7 @@ public abstract class BaseEntity {
     private LocalDateTime updatedAt;
 
     @Schema(description = "삭제 여부", example = "false", defaultValue = "false")
+    @Builder.Default
     @Column(nullable = false)
     private Boolean isDeleted = false;
 

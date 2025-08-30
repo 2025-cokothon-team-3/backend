@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Schema(description = "성향 비교 요청 DTO")
 @Data
 @Builder
@@ -14,5 +16,5 @@ import lombok.NoArgsConstructor;
 public class ComparisonRequestDto {
 
     @Schema(description = "비교할 사용자 ID 목록", example = "[1, 2, 3, 4]")
-    private java.util.List<Long> userIds;
+    private List<Long> userIds;
 }

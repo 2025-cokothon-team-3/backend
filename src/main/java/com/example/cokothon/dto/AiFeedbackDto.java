@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Schema(description = "AI 피드백 응답 DTO")
 @Data
 @Builder
@@ -14,7 +16,7 @@ import lombok.NoArgsConstructor;
 public class AiFeedbackDto {
 
     @Schema(description = "비교 대상 사용자 목록")
-    private java.util.List<UserSearchDto> users;
+    private List<UserSearchDto> users;
 
     @Schema(description = "AI가 생성한 호환성 분석 피드백",
             example = "이 그룹은 서로 다른 성향이 조화롭게 섞여있어...")
@@ -24,8 +26,8 @@ public class AiFeedbackDto {
     private Integer compatibilityScore;
 
     @Schema(description = "AI 추천사항 목록")
-    private java.util.List<String> recommendations;
+    private List<String> recommendations;
 
     @Schema(description = "주의사항 목록")
-    private java.util.List<String> warningPoints;
+    private List<String> warningPoints;
 }

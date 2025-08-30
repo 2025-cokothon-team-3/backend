@@ -1,10 +1,12 @@
 package com.example.cokothon.service;
 
+<<<<<<< Updated upstream
 import com.example.cokothon.entity.User;
 import com.example.cokothon.entity.TestResult;
 import com.example.cokothon.repository.UserRepository;
 import com.example.cokothon.repository.TestResultRepository;
 import com.example.cokothon.dto.UserSearchDto;
+import com.example.cokothon.common.response.ApiResponse;
 import com.example.cokothon.dto.TestResultDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,18 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final TestResultRepository testResultRepository;
+    
+    
+    public ApiResponse<User> loginCheck(String nickname){
+    	
+    	User newUser = User.builder()
+                .nickname(nickname)
+                .build();
+
+        userRepository.save(newUser);
+
+        return ApiResponse.success("로그인 성공", newUser);
+    }
 
     /**
      * 닉네임으로 사용자 검색 (테스트 완료자만)
@@ -92,3 +106,8 @@ public class UserService {
                 .build();
     }
 }
+=======
+public class UserService {
+
+}
+>>>>>>> Stashed changes

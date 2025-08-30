@@ -25,6 +25,14 @@ public class UserService {
     
     public ApiResponse<User> loginCheck(String nickname){
     	
+    	if(nickname.length()>15) {
+    		return ApiResponse.failure("닉네임은 15자 이내로 작성해주세요.",null);
+    	}else if(userRepository.existsByNickname(nickname)) {
+    		return ApiResponse.failure("이미 존재하는 닉네임입니다.",null);
+    	}else if(nickname.equals("")||nickname == null) {
+    		return ApiResponse.failure("원하는 닉네임을 입력해주세요",null);
+    	}
+    	
     	User newUser = User.builder()
                 .nickname(nickname)
                 .build();
@@ -104,4 +112,6 @@ public class UserService {
                 .createdAt(user.getCreatedAt())
                 .build();
     }
+
 }
+

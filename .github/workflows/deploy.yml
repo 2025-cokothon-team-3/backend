@@ -64,18 +64,22 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
 
+      - name: Test SSH connection
+        run: |
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $EC2_USER@$EC2_HOST "echo 'SSH connection successful'"
+
       - name: Stop existing application
         run: |
-          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cd $APP_DIR && docker-compose down || true"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "cd $APP_DIR && docker-compose down || true"
 
       - name: Upload files to EC2
         run: |
-          scp -o StrictHostKeyChecking=no -r deploy/* $EC2_USER@$EC2_HOST:$APP_DIR/
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=30 -r deploy/* $EC2_USER@$EC2_HOST:$APP_DIR/
 
       - name: Deploy application
         run: |
-          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cd $APP_DIR && docker-compose up -d --build"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "cd $APP_DIR && docker-compose up -d --build"
 
       - name: Check deployment status
         run: |
-          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cd $APP_DIR && docker-compose ps && docker-compose logs --tail=50 app"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "cd $APP_DIR && docker-compose ps && docker-compose logs --tail=50 app"

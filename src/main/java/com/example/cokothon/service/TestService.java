@@ -124,7 +124,7 @@ public class TestService {
      * 기존 답변 및 결과 삭제 (재테스트 허용)
      */
     private void deleteExistingAnswers(Long userId) {
-        List<UserAnswer> existingAnswers = userAnswerRepository.findByUserIdOrderByQuestionId(userId);
+        List<UserAnswer> existingAnswers = userAnswerRepository.findByUserIdAndIsDeletedFalseOrderByQuestionId(userId);
         if (!existingAnswers.isEmpty()) {
             userAnswerRepository.deleteAll(existingAnswers);
         }

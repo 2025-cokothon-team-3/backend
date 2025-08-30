@@ -89,46 +89,73 @@ public class TravelComparisonService {
     }
 
     /**
-     * 최적화된 Gemini 프롬프트 생성
+     * 사용자 친화적인 Gemini 프롬프트 생성
      */
     private String createOptimizedPrompt(List<TestResultDto> results, int compatibilityScore) {
-        String groupSummary = generateGroupSummary(results);
+        String groupSummary = generateFriendlyGroupSummary(results);
         String conflictPoints = identifyPotentialConflicts(results);
 
         return String.format("""
-            여행 컨설턴트로서 %d명 그룹의 호환성을 분석해주세요.
-            
-            그룹 구성: %s
-            호환성 점수: %d/100점
-            예상 갈등: %s
-            
-            다음 형식으로 정확히 구분해서 답변하세요:
-            
-            [ANALYSIS]
-            그룹의 전체적인 여행 성향과 특징을 2-3문장으로 설명
-            
-            [RECOMMENDATIONS]  
-            이 그룹에게 가장 적합한 여행 스타일과 추천 활동을 2-3문장으로 제안
-            
-            [WARNINGS]
-            여행 중 주의해야 할 갈등 요소와 해결 방법을 2문장으로 조언
-            
-            각 섹션은 간결하고 실용적으로 작성해주세요.
-            """,
+        친구들과 함께 여행가는 %d명 그룹을 분석해주세요. 마치 여행을 많이 다녀본 친한 친구가 조언해주는 것처럼 편하고 재미있게 말해주세요.
+        
+        그룹 구성: %s
+        궁합 점수: %d점
+        주의할 점: %s
+        
+        다음처럼 답변해주세요:
+        
+        [ANALYSIS]
+        이 그룹의 여행 스타일을 친근하게 설명해주세요. "너희 그룹은..." 이런 식으로 시작해서 2-3문장으로.
+        
+        [RECOMMENDATIONS]
+        구체적이고 실용적인 여행 추천을 해주세요. "이런 여행 어때?" 하는 느낌으로 2-3문장.
+        
+        [WARNINGS]
+        여행 중 조심해야 할 점을 솔직하지만 부드럽게 알려주세요. 해결 방법도 같이. 1-2문장.
+        
+        전체적으로 따뜻하고 유머러스하게, 하지만 실용적인 조언이 되도록 작성해주세요.
+        """,
                 results.size(), groupSummary, compatibilityScore, conflictPoints
         );
     }
 
     /**
-     * 그룹 요약 생성
+     * 친근한 그룹 요약 생성
      */
-    private String generateGroupSummary(List<TestResultDto> results) {
+    private String generateFriendlyGroupSummary(List<TestResultDto> results) {
         Map<String, Long> typeCount = results.stream()
                 .collect(Collectors.groupingBy(TestResultDto::getDominantType, Collectors.counting()));
 
-        return typeCount.entrySet().stream()
-                .map(entry -> entry.getKey() + "(" + entry.getValue() + "명)")
-                .collect(Collectors.joining(", "));
+        StringBuilder summary = new StringBuilder();
+
+        typeCount.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .forEach(entry -> {
+                    String friendlyType = makeFriendlyType(entry.getKey());
+                    if (entry.getValue() == 1) {
+                        summary.append(friendlyType).append(" 1명, ");
+                    } else {
+                        summary.append(friendlyType).append(" ").append(entry.getValue()).append("명, ");
+                    }
+                });
+
+        return summary.toString().replaceAll(", $", "");
+    }
+
+    /**
+     * 성향을 친근하게 변환
+     */
+    private String makeFriendlyType(String originalType) {
+        // 딱딱한 용어를 친근하게 변환
+        return originalType
+                .replace("계획형", "미리미리 계획러")
+                .replace("즉흥형", "그때그때 즉흥러")
+                .replace("럭셔리", "좋은 거 좋아하는")
+                .replace("절약", "가성비 추구하는")
+                .replace("액티브", "활발한")
+                .replace("휴식", "여유로운")
+                .replace("사교", "사람 좋아하는")
+                .replace("개인", "나만의 시간 소중한");
     }
 
     /**
@@ -196,7 +223,7 @@ public class TravelComparisonService {
     }
 
     /**
-     * AI 응답 파싱
+     * AI 응답 파싱 - 더 유연한 처리
      */
     private Map<String, String> parseAiResponse(String response) {
         Map<String, String> result = new HashMap<>();
@@ -214,19 +241,58 @@ public class TravelComparisonService {
                 }
             }
 
-            // 기본값 설정
-            result.putIfAbsent("analysis", response.substring(0, Math.min(200, response.length())));
-            result.putIfAbsent("recommendations", "개별 성향을 고려한 균형 잡힌 여행을 추천합니다.");
-            result.putIfAbsent("warnings", "사전 충분한 소통을 통해 갈등을 예방하세요.");
+            // 기본값을 더 친근하게 설정
+            result.putIfAbsent("analysis",
+                    "너희 그룹은 각자 다른 매력이 있어서 여행이 재미있을 것 같아! 서로 다른 점들이 오히려 여행을 더 풍성하게 만들어줄 거야.");
+            result.putIfAbsent("recommendations",
+                    "각자 좋아하는 걸 조금씩 섞은 여행 코스를 짜보는 건 어때? 계획도 적당히, 예산도 적당히 맞춰서 모두가 만족할 수 있을 거야.");
+            result.putIfAbsent("warnings",
+                    "가장 중요한 건 서로 배려하는 마음! 여행 전에 예산이나 일정 같은 중요한 부분은 미리 얘기해두면 더 즐거운 여행이 될 거야.");
 
         } catch (Exception e) {
             log.warn("AI 응답 파싱 실패, 기본값 사용: {}", e.getMessage());
-            result.put("analysis", response);
-            result.put("recommendations", "그룹 성향을 고려한 맞춤 여행을 추천합니다.");
-            result.put("warnings", "여행 전 충분한 계획과 소통이 필요합니다.");
+            result.put("analysis", "너희 그룹만의 특별한 매력이 있을 거야! 함께 여행하면서 새로운 추억을 많이 만들어보자.");
+            result.put("recommendations", "서로의 취향을 존중하면서 즐거운 여행 계획을 세워보길 추천해!");
+            result.put("warnings", "여행 전에 중요한 것들은 미리 상의하고, 서로 이해하는 마음으로 떠나면 최고의 여행이 될 거야!");
         }
 
         return result;
+    }
+
+    /**
+     * 대체 분석도 더 친근하게
+     */
+    private ComparisonAnalysisDto createFallbackAnalysis(List<Long> userIds, String userIdsKey) {
+        int baseScore = 75 + (int)(Math.random() * 20); // 75-95 랜덤
+
+        String[] friendlyAnalyses = {
+                "너희 %d명이 함께하는 여행이면 분명 재미있을 거야! 각자 다른 매력이 있어서 여행이 더 다채로워질 것 같아.",
+                "%d명이서 가는 여행이니까 의견이 다를 수도 있지만, 그래서 오히려 더 흥미진진한 여행이 될 거야!",
+                "너희 그룹은 서로 다른 스타일이 조화롭게 섞여있어서 균형 잡힌 여행을 즐길 수 있을 것 같아."
+        };
+
+        String[] friendlyRecommendations = {
+                "각자 하고 싶은 걸 하나씩 정해서 돌아가면서 즐기는 건 어때? 그러면 모두가 만족할 수 있을 거야.",
+                "자유시간과 함께하는 시간을 적절히 나눠서 계획하면 딱 좋을 것 같아!",
+                "너무 빡빡하게 짜지 말고 여유롭게 즐기면서, 그때그때 분위기 봐서 결정하는 것도 좋을 것 같아."
+        };
+
+        String[] friendlyWarnings = {
+                "가장 중요한 건 서로 배려하는 마음! 예산이나 일정 같은 건 미리 얘기해두자.",
+                "의견이 다를 때는 서로 이해하려고 노력하고, 타협점을 찾아보면 될 거야.",
+                "여행 중에 작은 갈등이 생겨도 금방 풀릴 거야. 다 추억이 될 테니까!"
+        };
+
+        int randomIndex = (int)(Math.random() * 3);
+
+        return ComparisonAnalysisDto.builder()
+                .userIds(userIds)
+                .memberCount(userIds.size())
+                .compatibilityScore(baseScore)
+                .analysis(String.format(friendlyAnalyses[randomIndex], userIds.size()))
+                .recommendations(friendlyRecommendations[randomIndex])
+                .warningPoints(friendlyWarnings[randomIndex])
+                .build();
     }
 
     private String extractContent(String section, String header) {
@@ -245,22 +311,6 @@ public class TravelComparisonService {
                 .recommendations(result.getRecommendations())
                 .warningPoints(result.getWarningPoints())
                 .analysisDate(result.getCreatedAt())
-                .build();
-    }
-
-    /**
-     * 오류 시 대체 분석 제공
-     */
-    private ComparisonAnalysisDto createFallbackAnalysis(List<Long> userIds, String userIdsKey) {
-        int baseScore = 75 + (int)(Math.random() * 20); // 75-95 랜덤
-
-        return ComparisonAnalysisDto.builder()
-                .userIds(userIds)
-                .memberCount(userIds.size())
-                .compatibilityScore(baseScore)
-                .analysis(String.format("%d명으로 구성된 여행 그룹입니다. 다양한 성향이 조화를 이루어 흥미로운 여행이 될 것으로 예상됩니다.", userIds.size()))
-                .recommendations("각자의 선호도를 고려한 일정을 짜고, 개인 시간과 단체 시간을 적절히 배분하는 것을 추천합니다.")
-                .warningPoints("여행 전 예산과 일정에 대해 충분히 논의하여 갈등을 미리 예방하시기 바랍니다.")
                 .build();
     }
 

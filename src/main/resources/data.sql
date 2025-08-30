@@ -3,107 +3,106 @@
 -- 1. PLANNING 카테고리 (계획 성향) - 4문항
 INSERT INTO questions (content, choice1, choice2, choice3, question_order, category, is_deleted, created_at, updated_at) VALUES
                                                                                                                              ('여행 계획을 세울 때 나는?',
-                                                                                                                              '숙소랑 비행기만 예약하면 끝! 나머지는 그날 기분에 따라 생각하지 뭐 ㅋ',
-                                                                                                                              '꼭 필요한 예약이랑 가고 싶은 곳 정도는 정리해 둘까?',
-                                                                                                                              '여행을 망칠 수는 없지.. 엑셀에 분 단위로 계획 철저히 세워야지',
+                                                                                                                              '숙소랑 비행기만 예약하면 끝!\n나머지는 그날 기분에 따라 생각하지 뭐 ㅋ',
+                                                                                                                              '꼭 필요한 예약이랑 가고 싶은 곳 정도는\n정리해 둘까?',
+                                                                                                                              '여행을 망칠 수는 없지..\n엑셀에 분 단위로 계획 철저히 세워야지',
                                                                                                                               1, 'PLANNING', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
                                                                                                                              ('새로운 도시에서 첫날은?',
-                                                                                                                              '일단 발 닿는 대로 걸으면서 분위기를 느끼자 ~',
-                                                                                                                              '지도에 표시한 몇 군데만 가볼까?',
-                                                                                                                              '일정표대로 바로 스팟 공략 가야지',
+                                                                                                                              '일단 발 닿는 대로 걸으면서\n분위기를 느끼자 ~',
+                                                                                                                              '지도에 표시한 몇 군데만\n가볼까?',
+                                                                                                                              '일정표대로 바로\n스팟 공략 가야지',
                                                                                                                               2, 'PLANNING', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
                                                                                                                              ('원래 가려고 했던 식당이 문을 닫았다. 당신의 반응은?',
-                                                                                                                              '괜찮아. 오히려 재밌다! 즉흥이 매력',
-                                                                                                                              '당황스럽지만 금방 대안 찾아서 움직임',
-                                                                                                                              '하.. 스트레스야.. 일정이 망가졌잖아 ..!',
+                                                                                                                              '괜찮아. 오히려 재밌다!\n즉흥이 매력',
+                                                                                                                              '당황스럽지만 금방 대안 찾아서\n움직임',
+                                                                                                                              '하.. 스트레스야..\n일정이 망가졌잖아 ..!',
                                                                                                                               3, 'PLANNING', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
                                                                                                                              ('다음 일정으로 이동하다가 너무 멋진 바다를 발견했는데…',
-                                                                                                                              '당장 주차해;;; 여기서 놀자',
-                                                                                                                              '나중에 꼭 와야지 지도에 저장한다',
-                                                                                                                              '남은 시간 중에 다시 올 수 있나? 일정을 정리해본다.',
+                                                                                                                              '당장 주차해;;;\n여기서 놀자',
+                                                                                                                              '나중에 꼭 와야지\n지도에 저장한다',
+                                                                                                                              '남은 시간 중에 다시 올 수 있나?\n일정을 정리해본다.',
                                                                                                                               4, 'PLANNING', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- 2. BUDGET 카테고리 (예산 성향) - 4문항
 INSERT INTO questions (content, choice1, choice2, choice3, question_order, category, is_deleted, created_at, updated_at) VALUES
-                                                                                                                             ('내가 묶을 숙소는?',
-                                                                                                                              '숙소가 뭐 중요하니 ~ 최대한 싸게! 1박 5만원 정도',
-                                                                                                                              '편안한 호텔 1박 15만원 정도',
-                                                                                                                              '뷰 맛집 호텔 1박 25만원 이상',
+                                                                                                                             ('내가 묵을 숙소는?',
+                                                                                                                              '숙소가 뭐 중요하니 ~\n최대한 싸게! 1박 5만원 정도',
+                                                                                                                              '편안한 호텔\n1박 15만원 정도',
+                                                                                                                              '뷰 맛집 호텔\n1박 25만원 이상',
                                                                                                                               5, 'BUDGET', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
                                                                                                                              ('식사 스타일은?',
-                                                                                                                              '현지 길거리 음식/노포 탐방이 짱',
-                                                                                                                              '유명 맛집 + 현지 로컬 적절히',
-                                                                                                                              '미슐랭/리뷰 높은 식당 위주로 확실히',
+                                                                                                                              '현지 길거리 음식/노포 탐방이\n짱',
+                                                                                                                              '유명 맛집 + 현지 로컬\n적절히',
+                                                                                                                              '미슐랭/리뷰 높은 식당 위주로\n확실히',
                                                                                                                               6, 'BUDGET', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
                                                                                                                              ('쇼핑 스타일은?',
-                                                                                                                              '여행지에서 쇼핑은 거의 안 함',
-                                                                                                                              '기념품/로컬 브랜드 위주로 조금',
-                                                                                                                              '여기서 밖에 못 사~ 쇼핑 많이 해야지',
+                                                                                                                              '여행지에서 쇼핑은\n거의 안 함',
+                                                                                                                              '기념품/로컬 브랜드 위주로\n조금',
+                                                                                                                              '여기서 밖에 못 사~\n쇼핑 많이 해야지',
                                                                                                                               7, 'BUDGET', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
                                                                                                                              ('2박 3일 여행, 내 캐리어에 옷은 몇 벌?',
-                                                                                                                              '편하면 장땡 ㅋ 단벌신사',
-                                                                                                                              '하루에 한 벌 정도? 적당히 챙겨야지',
-                                                                                                                              '인생샷을 위한 총알 준비 완. 하루에 2벌 이상',
+                                                                                                                              '편하면 장땡 ㅋ\n단벌신사',
+                                                                                                                              '하루에 한 벌 정도?\n적당히 챙겨야지',
+                                                                                                                              '인생샷을 위한 총알 준비 완.\n하루에 2벌 이상',
                                                                                                                               8, 'BUDGET', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- 3. ACTIVITY 카테고리 (활동 성향) - 4문항
 INSERT INTO questions (content, choice1, choice2, choice3, question_order, category, is_deleted, created_at, updated_at) VALUES
                                                                                                                              ('하루 일과는?',
-                                                                                                                              '아침 늦게 시작해서 여유롭게',
-                                                                                                                              '오전 관광 + 오후 휴식 밸런스',
-                                                                                                                              '이른 아침부터 빡빡하게 풀코스',
+                                                                                                                              '아침 늦게 시작해서\n여유롭게',
+                                                                                                                              '오전 관광 + 오후 휴식\n밸런스',
+                                                                                                                              '이른 아침부터\n빡빡하게 풀코스',
                                                                                                                               9, 'ACTIVITY', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
                                                                                                                              ('여행 가서 액티비티하자는 친구, 당신의 반응은?',
-                                                                                                                              '액티비티보다는 차라리 카페·산책이 더 좋은데..',
-                                                                                                                              '안전한 체험 위주로 가볍게 즐기고 싶어',
-                                                                                                                              '번지점프? 다이빙? 무조건 도전!',
+                                                                                                                              '액티비티보다는 차라리\n카페·산책이 더 좋은데..',
+                                                                                                                              '안전한 체험 위주로\n가볍게 즐기고 싶어',
+                                                                                                                              '번지점프? 다이빙?\n무조건 도전!',
                                                                                                                               10, 'ACTIVITY', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
                                                                                                                              ('여행 가서 운동 유무는?',
-                                                                                                                              '뭔 운동임? 여행가서는 쉬어야지',
-                                                                                                                              '가벼운 유산소 정도는 하고 싶어. 산책길 좀 걸을까?',
-                                                                                                                              '주변 헬스장이 어딨지.. 운동 해 줘야지',
+                                                                                                                              '뭔 운동임?\n여행가서는 쉬어야지',
+                                                                                                                              '가벼운 유산소 정도는 하고 싶어.\n산책길 좀 걸을까?',
+                                                                                                                              '주변 헬스장이 어딨지..\n운동 해 줘야지',
                                                                                                                               11, 'ACTIVITY', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
                                                                                                                              ('바닷가에서 나의 모습은?',
-                                                                                                                              '놀고와.. 난 여기서 짐 지키고 있을게',
-                                                                                                                              '물놀이 드루와',
-                                                                                                                              '물놀이는 기본이고 서핑이나 바나나보트까지 고????',
+                                                                                                                              '놀고와..\n난 여기서 짐 지키고 있을게',
+                                                                                                                              '물놀이\n드루와',
+                                                                                                                              '물놀이는 기본이고\n서핑이나 바나나보트까지 고????',
                                                                                                                               12, 'ACTIVITY', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- 4. SOCIAL 카테고리 (사교 성향) - 4문항
 INSERT INTO questions (content, choice1, choice2, choice3, question_order, category, is_deleted, created_at, updated_at) VALUES
                                                                                                                              ('여행 일정 끝 ~! 잠들기 전 나는?',
-                                                                                                                              '나만의 시간이 필요해…시간이 늦었지만 영화 좀 보다가 잘까?',
-                                                                                                                              '내일 일정을 위해서 빨리 자야지~ 체력 관리는 필수야!',
-                                                                                                                              '우리 대화하자 히히',
+                                                                                                                              '나만의 시간이 필요해…\n시간이 늦었지만 영화 좀 보다가 잘까?',
+                                                                                                                              '내일 일정을 위해서 빨리 자야지~\n체력 관리는 필수야!',
+                                                                                                                              '우리 대화하자\n히히',
                                                                                                                               13, 'SOCIAL', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
                                                                                                                              ('사진/기록 태도는?',
-                                                                                                                              '몇 장만 찍고 직접 경험에 집중',
-                                                                                                                              '사진과 기록 적당히 남겨두기',
-                                                                                                                              '사진은 필수야 나 계속 찍어줘! 우리 릴스도 찍을까?',
+                                                                                                                              '몇 장만 찍고\n직접 경험에 집중',
+                                                                                                                              '사진과 기록\n적당히 남겨두기',
+                                                                                                                              '사진은 필수야 나 계속 찍어줘!\n우리 릴스도 찍을까?',
                                                                                                                               14, 'SOCIAL', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
                                                                                                                              ('유명한 카페에 왔는데 웨이팅이… 2시간?!',
-                                                                                                                              '장난하시나요? 응 안가요',
-                                                                                                                              '근처에 비슷한 예쁜 카페 찾아서 고고',
-                                                                                                                              '웨이팅이 있는 이유가 있음… 기다린다',
+                                                                                                                              '장난하시나요?\n응 안가요',
+                                                                                                                              '근처에 비슷한 예쁜 카페 찾아서\n고고',
+                                                                                                                              '웨이팅이 있는 이유가 있음…\n기다린다',
                                                                                                                               15, 'SOCIAL', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
                                                                                                                              ('만약 다이어트 중에 여행을 간다면…',
-                                                                                                                              '아무리 여행이어도 관리는 해야지.. 계속 다이어트 고고',
-                                                                                                                              '적당히 먹겠음. 너무 과하겐 노노',
-                                                                                                                              '여행이니까 먹고 싶은 거 다 먹자 !!!',
+                                                                                                                              '아무리 여행이어도 관리는 해야지..\n계속 다이어트 고고',
+                                                                                                                              '적당히 먹겠음.\n너무 과하겐 노노',
+                                                                                                                              '여행이니까 먹고 싶은 거\n다 먹자 !!!',
                                                                                                                               16, 'SOCIAL', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
 -- 5. 여행 성향 타입 기본 데이터
 INSERT INTO travel_personalities (code, name, description, category, color_code, icon_url, is_deleted, created_at, updated_at) VALUES
 -- PLANNING 카테고리

@@ -3,6 +3,7 @@ package com.example.cokothon.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -12,8 +13,8 @@ import com.example.cokothon.common.entity.BaseEntity;
 
 import java.time.LocalDateTime;
 
+@SuperBuilder
 @Getter
-@NoArgsConstructor
 @Entity
 @Table(name = "tests")
 public class Question extends BaseEntity {

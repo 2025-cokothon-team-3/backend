@@ -10,9 +10,10 @@ import com.example.cokothon.common.entity.BaseEntity;
 
 import java.time.LocalDateTime;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
+@SuperBuilder
 @Getter
-@NoArgsConstructor
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity {

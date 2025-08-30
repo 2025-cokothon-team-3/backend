@@ -55,13 +55,17 @@ public class GeminiService {
                 .map(this::extractTextFromResponse)
                 .doOnError(error -> log.error("Error calling Gemini API", error));
     }
-    
+
     public String generateTextSync(String prompt) {
         try {
-            return generateText(prompt).block(Duration.ofSeconds(30));
+            String result = generateText(prompt).block(Duration.ofSeconds(30));
+            if (result == null || result.trim().isEmpty()) {
+                throw new RuntimeException("Gemini API returned empty response");
+            }
+            return result;
         } catch (Exception e) {
-            log.error("Error in synchronous call", e);
-            throw new RuntimeException("Failed to generate text", e);
+            log.error("Error in synchronous call: {}", e.getMessage());
+            throw new RuntimeException("Failed to generate text: " + e.getMessage(), e);
         }
     }
     

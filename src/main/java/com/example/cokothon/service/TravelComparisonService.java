@@ -11,11 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Map;
-import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -89,73 +86,68 @@ public class TravelComparisonService {
     }
 
     /**
-     * 사용자 친화적인 Gemini 프롬프트 생성
+     * 실용적이면서 자연스러운 Gemini 프롬프트 생성
      */
     private String createOptimizedPrompt(List<TestResultDto> results, int compatibilityScore) {
-        String groupSummary = generateFriendlyGroupSummary(results);
+        String groupSummary = generateDetailedGroupSummary(results);
         String conflictPoints = identifyPotentialConflicts(results);
 
         return String.format("""
-        친구들과 함께 여행가는 %d명 그룹을 분석해주세요. 마치 여행을 많이 다녀본 친한 친구가 조언해주는 것처럼 편하고 재미있게 말해주세요.
+        %d명의 여행 그룹을 분석해서 실용적인 조언을 해주세요. 여행 경험이 풍부한 전문가가 친근하면서도 구체적으로 조언하는 톤으로 작성해주세요.
         
         그룹 구성: %s
-        궁합 점수: %d점
-        주의할 점: %s
+        호환성 점수: %d/100점
+        예상 갈등 요소: %s
         
-        다음처럼 답변해주세요:
+        다음 형식으로 답변해주세요:
         
         [ANALYSIS]
-        이 그룹의 여행 스타일을 친근하게 설명해주세요. "너희 그룹은..." 이런 식으로 시작해서 2-3문장으로.
+        이 그룹의 여행 성향과 특징을 분석해주세요. 각 성향이 여행에서 어떻게 작용할지, 어떤 시너지가 날지 구체적으로 4-5문장으로 설명해주세요.
         
         [RECOMMENDATIONS]
-        구체적이고 실용적인 여행 추천을 해주세요. "이런 여행 어때?" 하는 느낌으로 2-3문장.
+        이 그룹에게 가장 적합한 여행 스타일과 구체적인 활동, 일정 구성 방법을 3-4문장으로 제안해주세요. 실제 실행 가능한 조언이어야 합니다.
         
         [WARNINGS]
-        여행 중 조심해야 할 점을 솔직하지만 부드럽게 알려주세요. 해결 방법도 같이. 1-2문장.
+        여행 중 발생할 수 있는 갈등과 해결 방법을 구체적으로 2-3문장으로 조언해주세요. 예방법과 대처법을 포함해주세요.
         
-        전체적으로 따뜻하고 유머러스하게, 하지만 실용적인 조언이 되도록 작성해주세요.
+        자연스럽고 이해하기 쉽게, 하지만 깊이 있는 분석이 되도록 작성해주세요.
         """,
                 results.size(), groupSummary, compatibilityScore, conflictPoints
         );
     }
 
     /**
-     * 친근한 그룹 요약 생성
+     * 상세한 그룹 요약 생성
      */
-    private String generateFriendlyGroupSummary(List<TestResultDto> results) {
-        Map<String, Long> typeCount = results.stream()
-                .collect(Collectors.groupingBy(TestResultDto::getDominantType, Collectors.counting()));
+    private String generateDetailedGroupSummary(List<TestResultDto> results) {
+        Map<String, Long> planningCount = results.stream()
+                .collect(Collectors.groupingBy(TestResultDto::getPlanningType, Collectors.counting()));
+        Map<String, Long> budgetCount = results.stream()
+                .collect(Collectors.groupingBy(TestResultDto::getBudgetType, Collectors.counting()));
+        Map<String, Long> activityCount = results.stream()
+                .collect(Collectors.groupingBy(TestResultDto::getActivityType, Collectors.counting()));
+        Map<String, Long> socialCount = results.stream()
+                .collect(Collectors.groupingBy(TestResultDto::getSocialType, Collectors.counting()));
 
         StringBuilder summary = new StringBuilder();
 
-        typeCount.entrySet().stream()
-                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-                .forEach(entry -> {
-                    String friendlyType = makeFriendlyType(entry.getKey());
-                    if (entry.getValue() == 1) {
-                        summary.append(friendlyType).append(" 1명, ");
-                    } else {
-                        summary.append(friendlyType).append(" ").append(entry.getValue()).append("명, ");
-                    }
-                });
+        // 계획 성향
+        planningCount.forEach((type, count) ->
+                summary.append(type).append(" ").append(count).append("명, "));
+
+        // 예산 성향
+        budgetCount.forEach((type, count) ->
+                summary.append(type).append(" ").append(count).append("명, "));
+
+        // 활동 성향
+        activityCount.forEach((type, count) ->
+                summary.append(type).append(" ").append(count).append("명, "));
+
+        // 사교 성향
+        socialCount.forEach((type, count) ->
+                summary.append(type).append(" ").append(count).append("명, "));
 
         return summary.toString().replaceAll(", $", "");
-    }
-
-    /**
-     * 성향을 친근하게 변환
-     */
-    private String makeFriendlyType(String originalType) {
-        // 딱딱한 용어를 친근하게 변환
-        return originalType
-                .replace("계획형", "미리미리 계획러")
-                .replace("즉흥형", "그때그때 즉흥러")
-                .replace("럭셔리", "좋은 거 좋아하는")
-                .replace("절약", "가성비 추구하는")
-                .replace("액티브", "활발한")
-                .replace("휴식", "여유로운")
-                .replace("사교", "사람 좋아하는")
-                .replace("개인", "나만의 시간 소중한");
     }
 
     /**
@@ -223,7 +215,7 @@ public class TravelComparisonService {
     }
 
     /**
-     * AI 응답 파싱 - 더 유연한 처리
+     * AI 응답 파싱 - 더 상세한 기본값 제공
      */
     private Map<String, String> parseAiResponse(String response) {
         Map<String, String> result = new HashMap<>();
@@ -241,46 +233,72 @@ public class TravelComparisonService {
                 }
             }
 
-            // 기본값을 더 친근하게 설정
+            // 더 상세한 기본값 설정
             result.putIfAbsent("analysis",
-                    "너희 그룹은 각자 다른 매력이 있어서 여행이 재미있을 것 같아! 서로 다른 점들이 오히려 여행을 더 풍성하게 만들어줄 거야.");
+                    "이 그룹은 서로 다른 여행 스타일을 가진 멤버들이 모인 흥미로운 조합입니다. " +
+                            "다양한 성향이 섞여있어 의견 조율이 필요하지만, 그만큼 다채로운 경험을 할 수 있는 잠재력이 있습니다. " +
+                            "각자의 강점을 살려 역할을 나누면 더욱 효율적이고 만족스러운 여행이 될 것입니다.");
+
             result.putIfAbsent("recommendations",
-                    "각자 좋아하는 걸 조금씩 섞은 여행 코스를 짜보는 건 어때? 계획도 적당히, 예산도 적당히 맞춰서 모두가 만족할 수 있을 거야.");
+                    "자유도가 높은 도시 여행을 추천합니다. 주요 관광지는 함께 방문하되, " +
+                            "식사나 쇼핑 등은 개인 선택권을 보장하는 방식으로 일정을 구성하세요. " +
+                            "오전에는 단체 활동, 오후에는 자유 시간을 두는 것이 모든 성향을 만족시킬 수 있는 방법입니다.");
+
             result.putIfAbsent("warnings",
-                    "가장 중요한 건 서로 배려하는 마음! 여행 전에 예산이나 일정 같은 중요한 부분은 미리 얘기해두면 더 즐거운 여행이 될 거야.");
+                    "예산과 일정에 대한 사전 합의가 가장 중요합니다. 여행 전에 1일 예산 범위와 필수 일정을 명확히 정하고, " +
+                            "의견이 다를 때는 다수결보다는 타협점을 찾는 것이 좋습니다. " +
+                            "서로의 여행 스타일을 존중하는 마음가짐이 갈등을 예방하는 핵심입니다.");
 
         } catch (Exception e) {
             log.warn("AI 응답 파싱 실패, 기본값 사용: {}", e.getMessage());
-            result.put("analysis", "너희 그룹만의 특별한 매력이 있을 거야! 함께 여행하면서 새로운 추억을 많이 만들어보자.");
-            result.put("recommendations", "서로의 취향을 존중하면서 즐거운 여행 계획을 세워보길 추천해!");
-            result.put("warnings", "여행 전에 중요한 것들은 미리 상의하고, 서로 이해하는 마음으로 떠나면 최고의 여행이 될 거야!");
+            // 파싱 실패시 전체 응답을 analysis에 넣되, 적절히 분할
+            String[] sentences = response.split("\\. ");
+            if (sentences.length >= 3) {
+                result.put("analysis", String.join(". ", Arrays.copyOfRange(sentences, 0, 2)) + ".");
+                result.put("recommendations", sentences[2] + ".");
+                if (sentences.length > 3) {
+                    result.put("warnings", String.join(". ", Arrays.copyOfRange(sentences, 3, sentences.length)));
+                } else {
+                    result.put("warnings", "여행 전 충분한 소통을 통해 갈등을 예방하는 것이 중요합니다.");
+                }
+            } else {
+                result.put("analysis", response);
+                result.put("recommendations", "각자의 성향을 고려한 균형잡힌 여행 계획을 세우시길 추천합니다.");
+                result.put("warnings", "사전에 충분한 논의를 통해 모두가 만족할 수 있는 여행이 되시길 바랍니다.");
+            }
         }
 
         return result;
     }
 
     /**
-     * 대체 분석도 더 친근하게
+     * 실용적이고 균형 잡힌 대체 분석 제공
      */
     private ComparisonAnalysisDto createFallbackAnalysis(List<Long> userIds, String userIdsKey) {
         int baseScore = 75 + (int)(Math.random() * 20); // 75-95 랜덤
 
-        String[] friendlyAnalyses = {
-                "너희 %d명이 함께하는 여행이면 분명 재미있을 거야! 각자 다른 매력이 있어서 여행이 더 다채로워질 것 같아.",
-                "%d명이서 가는 여행이니까 의견이 다를 수도 있지만, 그래서 오히려 더 흥미진진한 여행이 될 거야!",
-                "너희 그룹은 서로 다른 스타일이 조화롭게 섞여있어서 균형 잡힌 여행을 즐길 수 있을 것 같아."
+        String[] balancedAnalyses = {
+                "이 %d명의 그룹은 다양한 성향이 섞여있어 흥미로운 역학을 보일 것으로 예상됩니다. 서로 다른 여행 스타일이 때로는 의견 차이를 만들 수 있지만, 그만큼 예상치 못한 즐거움과 새로운 경험의 기회도 많아집니다. 각자의 강점을 활용하고 약점을 보완해준다면 매우 균형잡힌 여행이 가능할 것입니다.",
+
+                "%d명이 함께하는 여행은 개인 여행과는 다른 매력이 있습니다. 의견 조율이 필요한 순간들이 있겠지만, 이 과정에서 서로를 더 잘 알게 되고 깊은 우정을 쌓을 수 있는 기회가 됩니다. 다양한 관점이 만나면서 혼자서는 경험하기 어려운 특별한 추억을 만들 수 있을 것입니다.",
+
+                "이 그룹의 구성을 보면 서로의 성향이 좋은 시너지를 낼 수 있는 잠재력이 있습니다. 각자가 가진 여행에 대한 다른 접근 방식들이 조화롭게 어우러진다면, 계획적이면서도 유연하고, 경제적이면서도 만족스러운 여행을 만들어갈 수 있을 것입니다."
         };
 
-        String[] friendlyRecommendations = {
-                "각자 하고 싶은 걸 하나씩 정해서 돌아가면서 즐기는 건 어때? 그러면 모두가 만족할 수 있을 거야.",
-                "자유시간과 함께하는 시간을 적절히 나눠서 계획하면 딱 좋을 것 같아!",
-                "너무 빡빡하게 짜지 말고 여유롭게 즐기면서, 그때그때 분위기 봐서 결정하는 것도 좋을 것 같아."
+        String[] practicalRecommendations = {
+                "혼합형 일정 구성을 추천합니다. 오전에는 모두 함께 주요 관광지를 둘러보고, 오후에는 관심사에 따라 소그룹으로 나뉘어 활동하는 방식이 효과적입니다. 저녁에는 다시 모여 하루를 마무리하며 각자의 경험을 공유하는 시간을 갖는 것도 좋겠습니다.",
+
+                "역할 분담형 여행을 제안합니다. 한 명은 교통과 숙소를 담당하고, 다른 한 명은 맛집과 쇼핑을 리서치하는 식으로 각자의 관심 분야를 맡아 전문성을 발휘하면 됩니다. 이렇게 하면 부담도 줄이고 각자의 취향도 충분히 반영할 수 있습니다.",
+
+                "단계별 일정 수립을 권합니다. 첫째 날은 함께 주요 명소를 둘러보며 서로의 여행 패턴을 파악하고, 둘째 날부터는 개인 시간과 단체 시간을 적절히 배분해 진행하세요. 마지막 날에는 모두가 만족할 만한 공통 관심사를 중심으로 일정을 마무리하는 것이 좋습니다."
         };
 
-        String[] friendlyWarnings = {
-                "가장 중요한 건 서로 배려하는 마음! 예산이나 일정 같은 건 미리 얘기해두자.",
-                "의견이 다를 때는 서로 이해하려고 노력하고, 타협점을 찾아보면 될 거야.",
-                "여행 중에 작은 갈등이 생겨도 금방 풀릴 거야. 다 추억이 될 테니까!"
+        String[] specificWarnings = {
+                "예산 관리가 핵심입니다. 공동 경비와 개인 경비를 명확히 구분하고, 숙소나 교통비 같은 고정 비용은 미리 정산 방식을 정해두세요. 식사나 쇼핑에서는 개인차를 인정하고 강요하지 않는 분위기를 만드는 것이 중요합니다.",
+
+                "의사결정 방식을 사전에 합의해두세요. 모든 것을 다수결로 정하기보다는, 중요한 사안은 모두가 수용할 수 있는 타협점을 찾고, 사소한 것들은 당번제나 가위바위보로 정하는 등 유연한 접근이 필요합니다.",
+
+                "개인 시간의 중요성을 인식하세요. 24시간 내내 함께 있으면 피로가 쌓일 수 있으므로, 하루 중 1-2시간 정도는 각자 자유롭게 보낼 수 있는 시간을 보장하는 것이 좋습니다. 이것이 오히려 그룹 활동의 질을 높여줄 것입니다."
         };
 
         int randomIndex = (int)(Math.random() * 3);
@@ -289,9 +307,9 @@ public class TravelComparisonService {
                 .userIds(userIds)
                 .memberCount(userIds.size())
                 .compatibilityScore(baseScore)
-                .analysis(String.format(friendlyAnalyses[randomIndex], userIds.size()))
-                .recommendations(friendlyRecommendations[randomIndex])
-                .warningPoints(friendlyWarnings[randomIndex])
+                .analysis(String.format(balancedAnalyses[randomIndex], userIds.size()))
+                .recommendations(practicalRecommendations[randomIndex])
+                .warningPoints(specificWarnings[randomIndex])
                 .build();
     }
 

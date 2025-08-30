@@ -17,6 +17,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: List directory structure (debugging)
+        run: |
+          echo "Root directory:"
+          ls -la
+          echo "Looking for gradlew:"
+          find . -name "gradlew" -type f
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -34,17 +41,17 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Grant execute permission for gradlew
-        run: chmod +x backend/gradlew
+        run: chmod +x ./gradlew
 
       - name: Build with Gradle
-        run: cd backend && ./gradlew clean bootJar
+        run: ./gradlew clean bootJar
 
       - name: Prepare deployment files
         run: |
           mkdir -p deploy
-          cp backend/build/libs/*.jar deploy/app.jar
-          cp backend/docker-compose.yml deploy/
-          cp backend/Dockerfile deploy/
+          cp build/libs/*.jar deploy/app.jar
+          cp docker-compose.yml deploy/
+          cp Dockerfile deploy/
 
       - name: Configure SSH
         env:

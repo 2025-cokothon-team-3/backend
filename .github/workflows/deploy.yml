@@ -1,0 +1,75 @@
+name: Build and Deploy to EC2
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  EC2_HOST: 3.27.200.82
+  EC2_USER: ec2-user
+  APP_DIR: /home/ec2-user/backend
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/build.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        working-directory: backend
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        working-directory: backend
+        run: ./gradlew clean bootJar
+
+      - name: Prepare deployment files
+        working-directory: backend
+        run: |
+          mkdir -p ../deploy
+          cp build/libs/*.jar ../deploy/app.jar
+          cp docker-compose.yml ../deploy/
+          cp Dockerfile ../deploy/
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+
+      - name: Stop existing application
+        run: |
+          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cd $APP_DIR && docker-compose down || true"
+
+      - name: Upload files to EC2
+        run: |
+          scp -o StrictHostKeyChecking=no -r deploy/* $EC2_USER@$EC2_HOST:$APP_DIR/
+
+      - name: Deploy application
+        run: |
+          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cd $APP_DIR && docker-compose up -d --build"
+
+      - name: Check deployment status
+        run: |
+          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cd $APP_DIR && docker-compose ps && docker-compose logs --tail=50 app"

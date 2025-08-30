@@ -1,6 +1,5 @@
 package com.example.cokothon.service;
 
-<<<<<<< Updated upstream
 import com.example.cokothon.entity.User;
 import com.example.cokothon.entity.TestResult;
 import com.example.cokothon.repository.UserRepository;
@@ -106,8 +105,3 @@ public class UserService {
                 .build();
     }
 }
-=======
-public class UserService {
-
-}
->>>>>>> Stashed changes

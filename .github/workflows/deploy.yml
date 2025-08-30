@@ -3,6 +3,7 @@ name: Build and Deploy to EC2
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 env:
   EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -12,6 +13,7 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
@@ -32,15 +34,10 @@ jobs:
           java-version: '17'
           distribution: 'corretto'
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v3
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/build.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          gradle-home-cache-cleanup: true
 
       - name: Grant execute permission and build
         run: |
@@ -48,13 +45,15 @@ jobs:
           if [ -f "./gradlew" ]; then
             echo "gradlew found in root directory"
             chmod +x ./gradlew
-            ./gradlew clean bootJar
+            ./gradlew clean bootJar --no-daemon
+            echo "BUILD_PATH=." >> $GITHUB_ENV
           elif [ -f "./backend/gradlew" ]; then
             echo "gradlew found in backend directory"
             chmod +x ./backend/gradlew
-            cd backend && ./gradlew clean bootJar
+            cd backend && ./gradlew clean bootJar --no-daemon
+            echo "BUILD_PATH=./backend" >> $GITHUB_ENV
           else
-            echo "gradlew not found"
+            echo "❌ gradlew not found"
             exit 1
           fi
 
@@ -72,19 +71,32 @@ jobs:
       - name: Prepare deployment files
         run: |
           mkdir -p deploy
+          
           # JAR 파일 위치 확인 후 복사
-          if [ -f "./build/libs/"*.jar ]; then
-            cp ./build/libs/*.jar deploy/app.jar
-            cp ./docker-compose.yml deploy/
-            cp ./Dockerfile deploy/
-          elif [ -f "./backend/build/libs/"*.jar ]; then
-            cp ./backend/build/libs/*.jar deploy/app.jar
-            cp ./backend/docker-compose.yml deploy/
-            cp ./backend/Dockerfile deploy/
+          if [ "$BUILD_PATH" = "." ]; then
+            if [ -f "./build/libs/"*.jar ]; then
+              cp ./build/libs/*.jar deploy/app.jar
+              cp ./docker-compose.yml deploy/
+              cp ./Dockerfile deploy/
+              echo "✅ Files copied from root directory"
+            else
+              echo "❌ JAR file not found in ./build/libs/"
+              exit 1
+            fi
           else
-            echo "JAR file not found"
-            exit 1
+            if [ -f "./backend/build/libs/"*.jar ]; then
+              cp ./backend/build/libs/*.jar deploy/app.jar
+              cp ./backend/docker-compose.yml deploy/
+              cp ./backend/Dockerfile deploy/
+              echo "✅ Files copied from backend directory"
+            else
+              echo "❌ JAR file not found in ./backend/build/libs/"
+              exit 1
+            fi
           fi
+          
+          echo "Deployment package contents:"
+          ls -la deploy/
 
       - name: Configure SSH
         uses: shimataro/ssh-key-action@v2
@@ -98,20 +110,83 @@ jobs:
 
       - name: Test SSH connection
         run: |
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $EC2_USER@$EC2_HOST "echo 'SSH connection successful'"
+          echo "Testing SSH connection..."
+          if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $EC2_USER@$EC2_HOST "echo 'SSH connection successful'"; then
+            echo "✅ SSH connection verified"
+          else
+            echo "❌ SSH connection failed"
+            exit 1
+          fi
+
+      - name: Prepare EC2 environment
+        run: |
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
+            mkdir -p $APP_DIR
+          
+            # 기존 JAR 파일 백업 (선택사항)
+            if [ -f '$APP_DIR/app.jar' ]; then
+              cp $APP_DIR/app.jar $APP_DIR/app.jar.backup.\$(date +%Y%m%d_%H%M%S) || true
+              echo 'Previous deployment backed up'
+            fi
+          "
 
       - name: Stop existing application
         run: |
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "cd $APP_DIR && docker-compose down || true"
+          echo "Stopping existing application..."
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
+            cd $APP_DIR && docker-compose down --remove-orphans || {
+              echo 'No existing containers to stop'
+              exit 0
+            }
+          "
 
       - name: Upload files to EC2
         run: |
+          echo "Uploading deployment files..."
           scp -o StrictHostKeyChecking=no -o ConnectTimeout=30 -r deploy/* $EC2_USER@$EC2_HOST:$APP_DIR/
+          echo "✅ Files uploaded successfully"
+
+      - name: Create environment file
+        run: |
+          echo "Creating environment file..."
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
+            cd $APP_DIR && 
+            echo 'GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}' > .env &&
+            echo '✅ Environment file created'
+          "
 
       - name: Deploy application
         run: |
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "cd $APP_DIR && docker-compose up -d --build"
+          echo "Starting deployment..."
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 $EC2_USER@$EC2_HOST "
+            cd $APP_DIR && docker-compose up -d --build --force-recreate
+          "
+          echo "✅ Application started"
+
+      - name: Wait for application startup
+        run: |
+          echo "Waiting for application to be ready..."
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
+            cd $APP_DIR
+            for i in {1..12}; do
+              if docker-compose ps | grep -q 'Up'; then
+                echo '✅ Application is running'
+                exit 0
+              fi
+              echo 'Waiting... (\$i/12)'
+              sleep 5
+            done
+            echo '⚠️ Application may still be starting'
+          "
 
       - name: Check deployment status
         run: |
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "cd $APP_DIR && docker-compose ps && docker-compose logs --tail=50 app"
+          echo "Final deployment status:"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
+            cd $APP_DIR
+            echo '=== Container Status ==='
+            docker-compose ps
+            echo -e '\n=== Recent Logs ==='
+            docker-compose logs --tail=50 app
+          "
+          echo "🚀 Deployment completed!"

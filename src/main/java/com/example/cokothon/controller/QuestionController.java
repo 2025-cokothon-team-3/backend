@@ -43,4 +43,13 @@ public class QuestionController {
         QuestionDto question = questionService.getQuestionById(questionId);
         return ApiResponse.success("질문 조회가 완료되었습니다.", question);
     }
+
+    @Operation(summary = "질문 순서로 조회", description = "질문 순서(1-16)로 특정 질문을 조회합니다.")
+    @GetMapping("/order/{questionOrder}")
+    public ApiResponse<QuestionDto> getQuestionByOrder(
+            @Parameter(description = "질문 순서 (1-16)", example = "1")
+            @PathVariable Integer questionOrder) {
+        QuestionDto question = questionService.getQuestionByOrder(questionOrder);
+        return ApiResponse.success("질문 조회가 완료되었습니다.", question);
+    }
 }

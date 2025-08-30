@@ -1,4 +1,4 @@
-package com.example.cokothon.test.controller;
+package com.example.cokothon.controller;
 
 import com.example.cokothon.common.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +11,8 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/test")
-public class TestController {
+@RequestMapping("/api/health")
+public class HealthCheckController {
 
     @GetMapping
     public ApiResponse<Map<String, Object>> health() {

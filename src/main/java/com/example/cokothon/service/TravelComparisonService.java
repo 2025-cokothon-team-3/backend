@@ -10,6 +10,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -36,8 +37,9 @@ public class TravelComparisonService {
         String userIdsKey = sortedIds.stream().map(String::valueOf).collect(Collectors.joining(","));
 
         // 기존 분석 결과 확인 (최근 7일 내)
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(7);
         Optional<ComparisonResult> existingResult = comparisonResultRepository
-                .findRecentByUserIds(userIdsKey, 7);
+                .findRecentByUserIds(userIdsKey, cutoffDate);
 
         if (existingResult.isPresent()) {
             log.info("기존 분석 결과 사용: {}", userIdsKey);
@@ -295,7 +297,8 @@ public class TravelComparisonService {
      * 인기 조합 분석
      */
     public List<String> getPopularCombinations() {
-        List<ComparisonResult> recentResults = comparisonResultRepository.findRecentResults(30);
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(30);
+        List<ComparisonResult> recentResults = comparisonResultRepository.findRecentResults(cutoffDate);
 
         return recentResults.stream()
                 .collect(Collectors.groupingBy(ComparisonResult::getUserIds, Collectors.counting()))

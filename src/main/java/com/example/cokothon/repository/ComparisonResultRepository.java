@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,10 +18,10 @@ public interface ComparisonResultRepository extends JpaRepository<ComparisonResu
      */
     @Query("SELECT cr FROM ComparisonResult cr " +
             "WHERE cr.userIds = :userIds AND cr.isDeleted = false " +
-            "AND cr.createdAt >= CURRENT_DATE - :days " +
-            "ORDER BY cr.createdAt DESC LIMIT 1")
+            "AND cr.createdAt >= :cutoffDate " +
+            "ORDER BY cr.createdAt DESC")
     Optional<ComparisonResult> findRecentByUserIds(@Param("userIds") String userIds,
-                                                   @Param("days") int days);
+                                                   @Param("cutoffDate") LocalDateTime cutoffDate);
 
     /**
      * 특정 사용자가 포함된 모든 분석 결과 조회
@@ -39,7 +41,7 @@ public interface ComparisonResultRepository extends JpaRepository<ComparisonResu
      * 최근 N일간의 분석 결과
      */
     @Query("SELECT cr FROM ComparisonResult cr " +
-            "WHERE cr.createdAt >= CURRENT_DATE - :days AND cr.isDeleted = false " +
+            "WHERE cr.createdAt >= :cutoffDate AND cr.isDeleted = false " +
             "ORDER BY cr.createdAt DESC")
-    List<ComparisonResult> findRecentResults(@Param("days") int days);
+    List<ComparisonResult> findRecentResults(@Param("cutoffDate") LocalDateTime cutoffDate);
 }

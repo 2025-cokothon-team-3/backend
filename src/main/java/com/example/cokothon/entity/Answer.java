@@ -3,6 +3,7 @@ package com.example.cokothon.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 
@@ -14,8 +15,8 @@ import com.example.cokothon.common.entity.BaseEntity;
 
 import java.time.LocalDateTime;
 
+@SuperBuilder
 @Getter
-@NoArgsConstructor
 @Entity
 @Table(name = "answers")
 public class Answer extends BaseEntity {

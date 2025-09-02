@@ -27,7 +27,6 @@ jobs:
           find . -name "gradlew" -type f
           echo "Looking for build.gradle:"
           find . -name "build.gradle" -type f
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -55,13 +54,11 @@ jobs:
             echo "❌ gradlew not found"
             exit 1
           fi
-
       - name: Debug build output
         run: |
           pwd && ls -la
           find . -name "*.jar" -type f
           find . -name "docker-compose.yml" -o -name "Dockerfile"
-
       - name: Prepare deployment files
         run: |
           mkdir -p deploy
@@ -85,7 +82,6 @@ jobs:
             fi
           fi
           ls -la deploy/
-
       - name: Configure SSH
         uses: shimataro/ssh-key-action@v2
         with:
@@ -100,7 +96,6 @@ jobs:
         run: |
           echo "Testing SSH connection..."
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $EC2_USER@$EC2_HOST "echo 'SSH connection successful'"
-
       - name: Prepare EC2 environment
         run: |
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
@@ -110,35 +105,33 @@ jobs:
               echo 'Previous deployment backed up'
             fi
           "
-
       - name: Stop existing application
         run: |
           echo "Stopping existing application..."
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
             cd $APP_DIR && docker compose down --remove-orphans || true
           "
-
       - name: Prepare environment file (locally)
         run: |
           mkdir -p deploy
-          cat > deploy/.env <<'EOF'
-# MySQL
-MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-MYSQL_PORT=3306
+          cat > deploy/.env << 'ENV_EOF'
+          # MySQL
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+          MYSQL_PORT=3306
 
-# App
-APP_PORT=8081
-SPRING_PROFILES_ACTIVE=${{ secrets.SPRING_PROFILES_ACTIVE }}
+          # App
+          APP_PORT=8081
+          SPRING_PROFILES_ACTIVE=${{ secrets.SPRING_PROFILES_ACTIVE }}
 
-# Spring Datasource (container-to-container uses service name 'mysql')
-SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${{ secrets.MYSQL_DATABASE }}?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-SPRING_DATASOURCE_USERNAME=root
-SPRING_DATASOURCE_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          # Spring Datasource (container-to-container uses service name 'mysql')
+          SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${{ secrets.MYSQL_DATABASE }}?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+          SPRING_DATASOURCE_USERNAME=root
+          SPRING_DATASOURCE_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
 
-# Others
-GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-EOF
+          # Others
+          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          ENV_EOF
           echo "✅ .env prepared locally"
 
       - name: Upload files to EC2
@@ -146,7 +139,6 @@ EOF
           echo "Uploading deployment files..."
           scp -o StrictHostKeyChecking=no -o ConnectTimeout=30 -r deploy/* $EC2_USER@$EC2_HOST:$APP_DIR/
           echo "✅ Files uploaded successfully"
-
       - name: Deploy application
         run: |
           echo "Starting deployment..."
@@ -154,7 +146,6 @@ EOF
             cd $APP_DIR && docker compose up -d --build --force-recreate
           "
           echo "✅ Application started"
-
       - name: Wait for application startup
         run: |
           echo "Waiting for application to be ready..."
@@ -170,7 +161,6 @@ EOF
             done
             echo '⚠️ Application may still be starting'
           "
-
       - name: Check deployment status
         run: |
           echo "Final deployment status:"

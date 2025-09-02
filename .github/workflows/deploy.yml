@@ -109,7 +109,18 @@ jobs:
         run: |
           echo "Stopping existing application..."
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
-            cd $APP_DIR && docker compose down --remove-orphans || true
+            cd $APP_DIR
+            if command -v docker-compose >/dev/null 2>&1; then
+              echo 'Using docker-compose (v1)'
+              docker-compose down --remove-orphans || true
+            elif docker compose version >/dev/null 2>&1; then
+              echo 'Using docker compose (v2)'
+              docker compose down --remove-orphans || true
+            else
+              echo 'Neither docker-compose nor docker compose found, stopping containers manually'
+              docker stop \$(docker ps -q) || true
+              docker rm \$(docker ps -aq) || true
+            fi
           "
       - name: Prepare environment file (locally)
         run: |
@@ -143,7 +154,18 @@ jobs:
         run: |
           echo "Starting deployment..."
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 $EC2_USER@$EC2_HOST "
-            cd $APP_DIR && docker compose up -d --build --force-recreate
+            cd $APP_DIR
+            if command -v docker-compose >/dev/null 2>&1; then
+              echo 'Using docker-compose (v1)'
+              docker-compose up -d --build --force-recreate
+            elif docker compose version >/dev/null 2>&1; then
+              echo 'Using docker compose (v2)'
+              docker compose up -d --build --force-recreate
+            else
+              echo '❌ Neither docker-compose nor docker compose found'
+              echo 'Please install Docker Compose on your EC2 instance'
+              exit 1
+            fi
           "
           echo "✅ Application started"
       - name: Wait for application startup
@@ -152,9 +174,21 @@ jobs:
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
             cd $APP_DIR
             for i in {1..12}; do
-              if docker compose ps | grep -q 'Up'; then
-                echo '✅ Application is running'
-                exit 0
+              if command -v docker-compose >/dev/null 2>&1; then
+                if docker-compose ps | grep -q 'Up'; then
+                  echo '✅ Application is running'
+                  exit 0
+                fi
+              elif docker compose version >/dev/null 2>&1; then
+                if docker compose ps | grep -q 'Up'; then
+                  echo '✅ Application is running'
+                  exit 0
+                fi
+              else
+                if docker ps | grep -q 'Up'; then
+                  echo '✅ Application is running'
+                  exit 0
+                fi
               fi
               echo 'Waiting... ('\"\$i\"'/12)'
               sleep 5
@@ -167,11 +201,24 @@ jobs:
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
             cd $APP_DIR
             echo '=== Container Status ==='
-            docker compose ps
-            echo -e '\n=== Recent App Logs ==='
-            docker compose logs --tail=100 app || true
-            echo -e '\n=== MySQL Health (if present) ==='
-            docker compose ps mysql || true
-            docker compose logs --tail=50 mysql || true
+            if command -v docker-compose >/dev/null 2>&1; then
+              docker-compose ps
+              echo -e '\n=== Recent App Logs ==='
+              docker-compose logs --tail=100 app || true
+              echo -e '\n=== MySQL Health (if present) ==='
+              docker-compose ps mysql || true
+              docker-compose logs --tail=50 mysql || true
+            elif docker compose version >/dev/null 2>&1; then
+              docker compose ps
+              echo -e '\n=== Recent App Logs ==='
+              docker compose logs --tail=100 app || true
+              echo -e '\n=== MySQL Health (if present) ==='
+              docker compose ps mysql || true
+              docker compose logs --tail=50 mysql || true
+            else
+              docker ps -a
+              echo -e '\n=== Recent App Logs ==='
+              docker logs \$(docker ps -q | head -1) --tail=100 || true
+            fi
           "
           echo "🚀 Deployment completed!"

@@ -118,20 +118,10 @@ jobs:
             cd $APP_DIR && docker compose down --remove-orphans || true
           "
 
-      - name: Upload files to EC2
-        run: |
-          echo "Uploading deployment files..."
-          scp -o StrictHostKeyChecking=no -o ConnectTimeout=30 -r deploy/* $EC2_USER@$EC2_HOST:$APP_DIR/
-          echo "✅ Files uploaded successfully"
-
-      - name: Create environment file
-        run: |
-          echo "Creating environment file..."
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$EC2_USER@$EC2_HOST" "bash -se" <<'EOSSH'
-set -e
-cd "$APP_DIR"
-
-cat > .env <<'EOF'
+      - name: Prepare environment file (locally)
+          run: |
+            mkdir -p deploy
+            cat > deploy/.env <<'EOF'
 # MySQL
 MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
 MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
@@ -149,9 +139,13 @@ SPRING_DATASOURCE_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
 # Others
 GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
 EOF
+      echo "✅ .env prepared locally"
 
-echo "✅ .env created"
-EOSSH
+      - name: Upload files to EC2
+        run: |
+          echo "Uploading deployment files..."
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=30 -r deploy/* $EC2_USER@$EC2_HOST:$APP_DIR/
+          echo "✅ Files uploaded successfully"
 
       - name: Deploy application
         run: |

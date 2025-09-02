@@ -128,30 +128,30 @@ jobs:
         run: |
           echo "Creating environment file..."
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$EC2_USER@$EC2_HOST" "bash -se" <<'EOSSH'
-      set -e
-      cd "$APP_DIR"
-      
-      cat > .env <<'EOF'
-      # MySQL
-      MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-      MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-      MYSQL_PORT=3306
-      
-      # App
-      APP_PORT=8081
-      SPRING_PROFILES_ACTIVE=${{ secrets.SPRING_PROFILES_ACTIVE }}
-      
-      # Spring Datasource (container-to-container uses service name 'mysql')
-      SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${{ secrets.MYSQL_DATABASE }}?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME=root
-      SPRING_DATASOURCE_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-      
-      # Others
-      GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-      EOF
-      
-      echo "✅ .env created"
-      EOSSH
+set -e
+cd "$APP_DIR"
+
+cat > .env <<'EOF'
+# MySQL
+MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+MYSQL_PORT=3306
+
+# App
+APP_PORT=8081
+SPRING_PROFILES_ACTIVE=${{ secrets.SPRING_PROFILES_ACTIVE }}
+
+# Spring Datasource (container-to-container uses service name 'mysql')
+SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${{ secrets.MYSQL_DATABASE }}?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+SPRING_DATASOURCE_USERNAME=root
+SPRING_DATASOURCE_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+
+# Others
+GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+EOF
+
+echo "✅ .env created"
+EOSSH
 
       - name: Deploy application
         run: |

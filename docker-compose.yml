@@ -15,9 +15,9 @@ services:
     build: .
     environment:
       SERVER_PORT: 8081
-      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-cokothon}?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-      DB_USERNAME: root
-      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-cokothon}?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
     ports:
       - "${APP_PORT:-8081}:8081"

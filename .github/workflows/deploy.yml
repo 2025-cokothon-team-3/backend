@@ -41,7 +41,6 @@ jobs:
 
       - name: Grant execute permission and build
         run: |
-          # gradlew 파일 위치에 따라 조건부 실행
           if [ -f "./gradlew" ]; then
             echo "gradlew found in root directory"
             chmod +x ./gradlew
@@ -59,43 +58,32 @@ jobs:
 
       - name: Debug build output
         run: |
-          echo "Current directory:"
-          pwd
-          echo "Directory contents:"
-          ls -la
-          echo "Looking for JAR files:"
+          pwd && ls -la
           find . -name "*.jar" -type f
-          echo "Looking for Docker files:"
           find . -name "docker-compose.yml" -o -name "Dockerfile"
 
       - name: Prepare deployment files
         run: |
           mkdir -p deploy
-          
-          # JAR 파일 위치 확인 후 복사
           if [ "$BUILD_PATH" = "." ]; then
-            if [ -f "./build/libs/"*.jar ]; then
+            if ls ./build/libs/*.jar >/dev/null 2>&1; then
               cp ./build/libs/*.jar deploy/app.jar
               cp ./docker-compose.yml deploy/
               cp ./Dockerfile deploy/
-              echo "✅ Files copied from root directory"
             else
               echo "❌ JAR file not found in ./build/libs/"
               exit 1
             fi
           else
-            if [ -f "./backend/build/libs/"*.jar ]; then
+            if ls ./backend/build/libs/*.jar >/dev/null 2>&1; then
               cp ./backend/build/libs/*.jar deploy/app.jar
               cp ./backend/docker-compose.yml deploy/
               cp ./backend/Dockerfile deploy/
-              echo "✅ Files copied from backend directory"
             else
               echo "❌ JAR file not found in ./backend/build/libs/"
               exit 1
             fi
           fi
-          
-          echo "Deployment package contents:"
           ls -la deploy/
 
       - name: Configure SSH
@@ -111,19 +99,12 @@ jobs:
       - name: Test SSH connection
         run: |
           echo "Testing SSH connection..."
-          if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $EC2_USER@$EC2_HOST "echo 'SSH connection successful'"; then
-            echo "✅ SSH connection verified"
-          else
-            echo "❌ SSH connection failed"
-            exit 1
-          fi
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $EC2_USER@$EC2_HOST "echo 'SSH connection successful'"
 
       - name: Prepare EC2 environment
         run: |
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
             mkdir -p $APP_DIR
-          
-            # 기존 JAR 파일 백업 (선택사항)
             if [ -f '$APP_DIR/app.jar' ]; then
               cp $APP_DIR/app.jar $APP_DIR/app.jar.backup.\$(date +%Y%m%d_%H%M%S) || true
               echo 'Previous deployment backed up'
@@ -134,10 +115,7 @@ jobs:
         run: |
           echo "Stopping existing application..."
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
-            cd $APP_DIR && docker-compose down --remove-orphans || {
-              echo 'No existing containers to stop'
-              exit 0
-            }
+            cd $APP_DIR && docker compose down --remove-orphans || true
           "
 
       - name: Upload files to EC2
@@ -150,16 +128,33 @@ jobs:
         run: |
           echo "Creating environment file..."
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
-            cd $APP_DIR && 
-            echo 'GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}' > .env &&
-            echo '✅ Environment file created'
-          "
+            cd $APP_DIR && cat > .env << 'EOF'
+# MySQL
+MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+MYSQL_PORT=3306
+  
+# App
+APP_PORT=8081
+SPRING_PROFILES_ACTIVE=${{ secrets.SPRING_PROFILES_ACTIVE }}
+  
+# Spring Datasource (container-to-container uses service name 'mysql')
+SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${{ secrets.MYSQL_DATABASE }}?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+SPRING_DATASOURCE_USERNAME=root
+SPRING_DATASOURCE_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
 
+# Others
+GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+EOF
+        echo '✅ .env created'
+        "
+
+      
       - name: Deploy application
         run: |
           echo "Starting deployment..."
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 $EC2_USER@$EC2_HOST "
-            cd $APP_DIR && docker-compose up -d --build --force-recreate
+            cd $APP_DIR && docker compose up -d --build --force-recreate
           "
           echo "✅ Application started"
 
@@ -169,11 +164,11 @@ jobs:
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
             cd $APP_DIR
             for i in {1..12}; do
-              if docker-compose ps | grep -q 'Up'; then
+              if docker compose ps | grep -q 'Up'; then
                 echo '✅ Application is running'
                 exit 0
               fi
-              echo 'Waiting... (\$i/12)'
+              echo 'Waiting... ('\"\$i\"'/12)'
               sleep 5
             done
             echo '⚠️ Application may still be starting'
@@ -185,8 +180,11 @@ jobs:
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "
             cd $APP_DIR
             echo '=== Container Status ==='
-            docker-compose ps
-            echo -e '\n=== Recent Logs ==='
-            docker-compose logs --tail=50 app
+            docker compose ps
+            echo -e '\n=== Recent App Logs ==='
+            docker compose logs --tail=100 app || true
+            echo -e '\n=== MySQL Health (if present) ==='
+            docker compose ps mysql || true
+            docker compose logs --tail=50 mysql || true
           "
           echo "🚀 Deployment completed!"

@@ -119,9 +119,9 @@ jobs:
           "
 
       - name: Prepare environment file (locally)
-          run: |
-            mkdir -p deploy
-            cat > deploy/.env <<'EOF'
+        run: |
+          mkdir -p deploy
+          cat > deploy/.env <<'EOF'
 # MySQL
 MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
 MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
@@ -139,7 +139,7 @@ SPRING_DATASOURCE_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
 # Others
 GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
 EOF
-      echo "✅ .env prepared locally"
+          echo "✅ .env prepared locally"
 
       - name: Upload files to EC2
         run: |
